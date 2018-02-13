@@ -1,0 +1,68 @@
+#
+# docker-compose file pour le déploiement initial de l'application geoquizz
+# Documentation complète : https://bitbucket.org/canals5/docker-things
+#
+# ajouter les vhosts des services web dans le fichier /etc/vhosts
+# de la machine hôte :
+# exemple pour le service api.public :
+# 127.0.0.1   mycv.local
+# pour accéder à ce service : https://mycv.local:10443
+#                      ou   :  http://mycv.local:10080
+# accès au service adminer : http://localhost:8080
+# accès au service mysql depuis le container mycv.public : utiliser le hostname "db"
+
+version: "3"
+networks:
+  mycv_network:
+    driver: bridge
+
+services:
+#############################
+# Application backend
+#############################
+  api.public:
+    image: canals/php
+    container_name: mycv.local
+    environment:
+      - VHOST_HOSTNAME=mycv.local
+      - VHOST_DOCROOT=/var/www/mycv
+#     - http_proxy=http://www-cache.iutnc.univ-lorraine.fr:3128/
+#     - https_proxy=http://www-cache.iutnc.univ-lorraine.fr:3128/
+    ports:
+      - "10080:80"
+      - "10443:443"
+    volumes :
+      - ./mycv:/var/www/mycv
+      - ./src:/var/www/src
+    networks:
+      - mycv_network
+    links :
+      - mysql:db
+
+#############################
+# Base de donnée
+#############################
+  mysql:
+    image: mariadb:latest
+    container_name: maria.mycv.local
+    environment:
+      - MYSQL_ROOT_PASSWORD=root123
+      - MYSQL_USER=mycv
+      - MYSQL_PASSWORD=mycv
+      - MYSQL_DATABASE=mycv
+    ports:
+      - "3603:3306"
+    networks:
+      - mycv_network
+    volumes :
+      - ./sql:/var/sql
+
+  adminer:
+     image: adminer
+     container_name: admin.mycv.local
+     ports:
+       - "8080:8080"
+     networks:
+      - mycv_network
+     links:
+       - mysql:db
