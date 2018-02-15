@@ -1,7 +1,4 @@
 <?php
-  //Démarrage de la session utilisateur
-  session_start();
-
   require_once __DIR__ . '/../src/vendor/autoload.php';
 
   use \Psr\Http\Message\ServerRequestInterface as Request;
@@ -12,7 +9,7 @@
 
   /* Appel des contrôleurs */
 
-
+  use \mycv\control\cvController as cv;
 
   /* Appel des utilitaires */
 
@@ -37,7 +34,7 @@
     'settings'=>[
       'displayErrorDetails'=>true,
       'production' => false,
-      'tmpl_dir' => __DIR__ . '/../src/view/template'
+      'tmpl_dir' => __DIR__ . '/../src/view'
     ],
     'view'=>function($c){
       return new \Slim\Views\Twig(
@@ -66,16 +63,6 @@
   	return $resp;
   }
 
-  function checkLogin(Request $req, Response $resp, callable $next){
-    if(isset($_SESSION['user_login'])){
-      return $next($req, $resp);
-    }else{
-      //$redirect=$this->get('router')->pathFor('loginPost');
-      $redirect='/';
-      $resp=$resp->withStatus(301)->withHeader('Location', $redirect);
-      return $next($req, $resp);
-    }
-  }
   //======================================================
   //======================================================
   //======================================================
@@ -84,34 +71,24 @@
   //======================================================
   //======================================================
 
-  // Page de création de compte
-  /*
+  //======================================================
+  //                  Versio Anglaise
+  //======================================================
 
-  $app->get('/creerCompte',
+  $app->get('/',
     function(Request $req, Response $resp, $args){
-      $ctrl=new Comptes($this);
-      return $ctrl->getComptesCreation($req,$resp,$args);
+      $args["lang"]="en";
+      $ctrl=new cv($this);
+      return $ctrl->index($req,$resp,$args);
     }
-  )->setName("comptesCreationGet");
+  )->setName("index2");
 
-  $validators = [
-      'nom' => Validator::stringType()->alnum()->setname("Nom"),
-      'email' => Validator::email()->setname("Email"),
-      'password' => Validator::stringType()->alnum()->setname("Password"),
-      'password_rep' => Validator::stringType()->alnum()->setname("Password_verify")
-  ];
-
-  $app->post('/creerCompte',
+  $app->get('/{lang}/index',
     function(Request $req, Response $resp, $args){
-      if($req->getAttribute('has_errors')){
-        $args['exception'] = $req->getAttribute('errors');
-      }
-      $ctrl=new Comptes($this);
-      return $ctrl->postCompte($req,$resp,$args);
+      $ctrl=new cv($this);
+      return $ctrl->index($req,$resp,$args);
     }
-  )->setName("comptesPost")->add(new Validation($validators));
-
-  */
+  )->setName("index");
 
   $app->run();
 ?>
